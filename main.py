@@ -98,16 +98,25 @@ class Data_Spider():
         logger.info(f'搜索关键词 {query} 作品数量: {len(work_list)}')
         if save_choice == 'all' or save_choice == 'excel':
             excel_name = query
-        for work_info in work_list:
-            logger.info(json.dumps(work_info))
-            logger.info(f'爬取作品信息 https://www.douyin.com/video/{work_info["aweme_info"]["aweme_id"]}')
-            work_info = handle_work_info(work_info['aweme_info'])
-            work_info_list.append(work_info)
-            if save_choice == 'all' or 'media' in save_choice:
-                download_work(work_info, base_path['media'], save_choice)
-        if save_choice == 'all' or save_choice == 'excel':
-            file_path = os.path.abspath(os.path.join(base_path['excel'], f'{excel_name}.xlsx'))
-            save_to_xlsx(work_info_list, file_path)
+        if len(work_list) == 0:
+            logger.warning(f'没有搜索到关键词 {query} 的作品')
+            return
+        else:
+            logger.info(f'搜索到关键词 {query} 的作品数量: {len(work_list)}')
+            for work_info in work_list:
+                logger.info(json.dumps(work_info))
+                if "aweme_info" not in work_info:
+                    logger.warning(f'作品信息 {work_info} 中没有 aweme_info 字段，跳过')
+                    continue
+                logger.info(f'爬取作品信息 https://www.douyin.com/video/{work_info["aweme_info"]["aweme_id"]}')
+                work_info = handle_work_info(work_info['aweme_info'])
+                work_info_list.append(work_info)
+                if save_choice == 'all' or 'media' in save_choice:
+                    download_work(work_info, base_path['media'], save_choice)
+            if save_choice == 'all' or save_choice == 'excel':
+                file_path = os.path.abspath(os.path.join(base_path['excel'], f'{excel_name}.xlsx'))
+                save_to_xlsx(work_info_list, file_path)
+
 
 if __name__ == '__main__':
     """
@@ -124,24 +133,46 @@ if __name__ == '__main__':
     # save_choice 为 excel 或者 all 时，excel_name 不能为空
 
 
-    # 1 爬取列表的所有作品信息 作品链接 如下所示 注意此url会过期！
-    works = [
-        r'https://www.douyin.com/user/MS4wLjABAAAAv2Jr7Ngl7lQMjp4fw0AxtXkaHOgI_UL8aBJGGDSaU1g?from_tab_name=main&modal_id=7445533736877264178',
-    ]
-    data_spider.spider_some_work(auth, works, base_path, 'all', 'test')
+    # # 1 爬取列表的所有作品信息 作品链接 如下所示 注意此url会过期！
+    # works = [
+    #     r'https://www.douyin.com/user/MS4wLjABAAAAv2Jr7Ngl7lQMjp4fw0AxtXkaHOgI_UL8aBJGGDSaU1g?from_tab_name=main&modal_id=7445533736877264178',
+    # ]
+    # data_spider.spider_some_work(auth, works, base_path, 'all', 'test')
 
-    # 2 爬取用户的所有作品信息 用户链接 如下所示 注意此url会过期！
-    user_url = 'https://www.douyin.com/user/MS4wLjABAAAAULqT-SrJDT7RqeoxeGg1hB14Ia5UI9Pm66kzKmI1ITD2Fo3bUhqYePBaztkzj7U5?from_tab_name=main&relation=0&vid=7227654252435361061'
-    data_spider.spider_user_all_work(auth, user_url, base_path, 'all')
+    # # 2 爬取用户的所有作品信息 用户链接 如下所示 注意此url会过期！
+    # user_url = 'https://www.douyin.com/user/MS4wLjABAAAAULqT-SrJDT7RqeoxeGg1hB14Ia5UI9Pm66kzKmI1ITD2Fo3bUhqYePBaztkzj7U5?from_tab_name=main&relation=0&vid=7227654252435361061'
+    # data_spider.spider_user_all_work(auth, user_url, base_path, 'all')
 
-    # 3 搜索指定关键词的作品
-    query = "榴莲"
-    require_num = 20  # 搜索的数量
+    # # 3 搜索指定关键词的作品
+    # query = "榴莲"
+    # require_num = 20  # 搜索的数量
+    # sort_type = '0'  # 排序方式 0 综合排序, 1 最多点赞, 2 最新发布
+    # publish_time = '0'  # 发布时间 0 不限, 1 一天内, 7 一周内, 180 半年内
+    # filter_duration = ""  # 视频时长 空字符串 不限, 0-1 一分钟内, 1-5 1-5分钟内, 5-10000 5分钟以上
+    # search_range = "0"  # 搜索范围 0 不限, 1 最近看过, 2 还未看过, 3 关注的人
+    # content_type = "0"  # 内容形式 0 不限, 1 视频, 2 图文
+
+    # data_spider.spider_some_search_work(auth, query, require_num, base_path, 'all', sort_type, publish_time, filter_duration, search_range, content_type)
+
+    # 4 search wotk titles
+    query_list = ["外贸 没订单","外贸 难","外贸 亏","外贸 惨","外贸工厂关停","外贸工厂搬离",
+                  "华为 坑","华为 垃圾","华为 故障","小米 坑","小米 垃圾","小米 故障","比亚迪 坑","比亚迪 垃圾","比亚迪 故障"]
+    require_num = 40  # 搜索的数量
     sort_type = '0'  # 排序方式 0 综合排序, 1 最多点赞, 2 最新发布
-    publish_time = '0'  # 发布时间 0 不限, 1 一天内, 7 一周内, 180 半年内
+    publish_time = '7'  # 发布时间 0 不限, 1 一天内, 7 一周内, 180 半年内
     filter_duration = ""  # 视频时长 空字符串 不限, 0-1 一分钟内, 1-5 1-5分钟内, 5-10000 5分钟以上
-    search_range = "0"  # 搜索范围 0 不限, 1 最近看过, 2 还未看过, 3 关注的人
-    content_type = "0"  # 内容形式 0 不限, 1 视频, 2 图文
-
-    data_spider.spider_some_search_work(auth, query, require_num, base_path, 'all', sort_type, publish_time, filter_duration, search_range, content_type)
+    search_range = "2"  # 搜索范围 0 不限, 1 最近看过, 2 还未看过, 3 关注的人
+    content_type = "1"  # 内容形式 0 不限, 1 视频, 2 图文
+    import time
+    import random
+    for i in range(len(query_list)):
+        query = query_list[i]
+        logger.info(f'开始搜索关键词: {query}')
+        data_spider.spider_some_search_work(auth, query, require_num, base_path, 'excel', sort_type, publish_time, filter_duration, search_range, content_type)
+        if i == len(query_list) - 1:
+            logger.info(f'最后一个关键词 {query} 已经搜索完成')
+            break
+        s = random.randint(15, 20)
+        logger.info(f'搜索关键词 {query} 完成，等待 {s} 秒后继续下一次搜索')
+        time.sleep(s)
 
